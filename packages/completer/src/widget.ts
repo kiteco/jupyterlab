@@ -18,6 +18,7 @@ import { Message } from '@lumino/messaging';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { Widget } from '@lumino/widgets';
+import { CompletionHandler } from './handler';
 
 /**
  * The class name added to completer menu items.
@@ -711,6 +712,7 @@ export namespace Completer {
    * A renderer for completer widget nodes.
    */
   export interface IRenderer {
+    _createItemNode(item: CompletionHandler.ICompletionItem): HTMLLIElement;
     /**
      * Create an item node (an `li` element) for a text completer menu.
      */
@@ -725,6 +727,46 @@ export namespace Completer {
    * The default implementation of an `IRenderer`.
    */
   export class Renderer implements IRenderer {
+    _createItemNode(item: CompletionHandler.ICompletionItem): HTMLLIElement {
+      let li = document.createElement('li');
+      li.className = ITEM_CLASS;
+      // Set the raw, un-marked up value as a data attribute.
+      let dataValue: string;
+      if (item.insertText) {
+        dataValue = item.insertText;
+      } else {
+        dataValue = item.label;
+      }
+      li.setAttribute('data-value', dataValue);
+
+      let matchNode = document.createElement('code');
+      matchNode.className = 'jp-Completer-match';
+      // Use innerHTML because search results include <mark> tags.
+      matchNode.innerHTML = defaultSanitizer.sanitize(item.label, {
+        allowedTags: ['mark']
+      });
+
+      if (item.type) {
+        let typeNode = document.createElement('span');
+        let type = item.type;
+        typeNode.textContent = type.toLowerCase();
+        let colorIndex = 1; // TODO: Implement this properly
+        typeNode.className = 'jp-Completer-type';
+        typeNode.setAttribute(`data-color-index`, colorIndex.toString());
+        li.title = type;
+        let typeExtendedNode = document.createElement('code');
+        typeExtendedNode.className = 'jp-Completer-typeExtended';
+        typeExtendedNode.textContent = type.toLocaleLowerCase();
+        li.appendChild(typeNode);
+        li.appendChild(matchNode);
+        li.appendChild(typeExtendedNode);
+      } else {
+        li.appendChild(matchNode);
+      }
+      // Add icons, docs, etc...
+      return li;
+    }
+
     /**
      * Create an item node for a text completer menu.
      */
