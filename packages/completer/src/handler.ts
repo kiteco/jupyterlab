@@ -477,6 +477,29 @@ export namespace CompletionHandler {
     connector: IDataConnector<IReply, void, IRequest>;
   }
 
+  export interface ICompletionItems {
+    isIncomplete: boolean;
+    items: ReadonlyArray<ICompletionItem>;
+  }
+
+  export interface ICompletionItem {
+    label: string;
+    insertText?: string;
+    range: IRange;
+    type?: string;
+    icon: string;
+    documentation?: string;
+    resolve(): void;
+    filterText?: string;
+    deprecated?: boolean;
+    data?: any;
+  }
+
+  export interface IRange {
+    start: number;
+    end: number;
+  }
+
   /**
    * A reply to a completion request.
    */
