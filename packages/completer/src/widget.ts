@@ -727,6 +727,9 @@ export namespace Completer {
         let typeExtendedNode = document.createElement('code');
         typeExtendedNode.className = 'jp-Completer-typeExtended';
         typeExtendedNode.textContent = type.toLocaleLowerCase();
+        if (typeExtendedNode.textContent.endsWith('tion')) {
+          li.classList.add('jp-Completer-deprecated');
+        }
         li.appendChild(typeNode);
         li.appendChild(matchNode);
         li.appendChild(typeExtendedNode);
