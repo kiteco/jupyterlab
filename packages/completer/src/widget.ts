@@ -226,7 +226,7 @@ export class Completer extends Widget {
       return;
     }
 
-    let items = toArray(model.items());
+    let items = model.items().items;
 
     // If there are no items, reset and bail.
     if (!items || !items.length) {
@@ -260,11 +260,7 @@ export class Completer extends Widget {
 
     // Populate the completer items.
     for (let item of items) {
-      let li = this._renderer.createItemNode(
-        item!,
-        model.typeMap(),
-        orderedTypes
-      );
+      let li = this._renderer.createItemNode(item);
       node.appendChild(li);
     }
 
@@ -609,7 +605,8 @@ export namespace Completer {
     /**
      * Get the of visible items in the completer menu.
      */
-    items(): IIterator<IItem>;
+    // items(): IIterator<IItem>;
+    items(): CompletionHandler.ICompletionItems;
 
     /**
      * Get the unfiltered options in a completer menu.
@@ -712,22 +709,22 @@ export namespace Completer {
    * A renderer for completer widget nodes.
    */
   export interface IRenderer {
-    _createItemNode(item: CompletionHandler.ICompletionItem): HTMLLIElement;
+    createItemNode(item: CompletionHandler.ICompletionItem): HTMLLIElement;
     /**
      * Create an item node (an `li` element) for a text completer menu.
      */
-    createItemNode(
-      item: IItem,
-      typeMap: TypeMap,
-      orderedTypes: string[]
-    ): HTMLLIElement;
+    // createItemNode(
+    //   item: IItem,
+    //   typeMap: TypeMap,
+    //   orderedTypes: string[]
+    // ): HTMLLIElement;
   }
 
   /**
    * The default implementation of an `IRenderer`.
    */
   export class Renderer implements IRenderer {
-    _createItemNode(item: CompletionHandler.ICompletionItem): HTMLLIElement {
+    createItemNode(item: CompletionHandler.ICompletionItem): HTMLLIElement {
       let li = document.createElement('li');
       li.className = ITEM_CLASS;
       // Set the raw, un-marked up value as a data attribute.
@@ -770,43 +767,43 @@ export namespace Completer {
     /**
      * Create an item node for a text completer menu.
      */
-    createItemNode(
-      item: IItem,
-      typeMap: TypeMap,
-      orderedTypes: string[]
-    ): HTMLLIElement {
-      let li = document.createElement('li');
-      li.className = ITEM_CLASS;
-      // Set the raw, un-marked up value as a data attribute.
-      li.setAttribute('data-value', item.raw);
+    // createItemNode(
+    //   item: IItem,
+    //   typeMap: TypeMap,
+    //   orderedTypes: string[]
+    // ): HTMLLIElement {
+    //   let li = document.createElement('li');
+    //   li.className = ITEM_CLASS;
+    //   // Set the raw, un-marked up value as a data attribute.
+    //   li.setAttribute('data-value', item.raw);
 
-      let matchNode = document.createElement('code');
-      matchNode.className = 'jp-Completer-match';
-      // Use innerHTML because search results include <mark> tags.
-      matchNode.innerHTML = defaultSanitizer.sanitize(item.text, {
-        allowedTags: ['mark']
-      });
+    //   let matchNode = document.createElement('code');
+    //   matchNode.className = 'jp-Completer-match';
+    //   // Use innerHTML because search results include <mark> tags.
+    //   matchNode.innerHTML = defaultSanitizer.sanitize(item.text, {
+    //     allowedTags: ['mark']
+    //   });
 
-      // If there are types provided add those.
-      if (!JSONExt.deepEqual(typeMap, {})) {
-        let typeNode = document.createElement('span');
-        let type = typeMap[item.raw] || '';
-        typeNode.textContent = (type[0] || '').toLowerCase();
-        let colorIndex = (orderedTypes.indexOf(type) % N_COLORS) + 1;
-        typeNode.className = 'jp-Completer-type';
-        typeNode.setAttribute(`data-color-index`, colorIndex.toString());
-        li.title = type;
-        let typeExtendedNode = document.createElement('code');
-        typeExtendedNode.className = 'jp-Completer-typeExtended';
-        typeExtendedNode.textContent = type.toLocaleLowerCase();
-        li.appendChild(typeNode);
-        li.appendChild(matchNode);
-        li.appendChild(typeExtendedNode);
-      } else {
-        li.appendChild(matchNode);
-      }
-      return li;
-    }
+    //   // If there are types provided add those.
+    //   if (!JSONExt.deepEqual(typeMap, {})) {
+    //     let typeNode = document.createElement('span');
+    //     let type = typeMap[item.raw] || '';
+    //     typeNode.textContent = (type[0] || '').toLowerCase();
+    //     let colorIndex = (orderedTypes.indexOf(type) % N_COLORS) + 1;
+    //     typeNode.className = 'jp-Completer-type';
+    //     typeNode.setAttribute(`data-color-index`, colorIndex.toString());
+    //     li.title = type;
+    //     let typeExtendedNode = document.createElement('code');
+    //     typeExtendedNode.className = 'jp-Completer-typeExtended';
+    //     typeExtendedNode.textContent = type.toLocaleLowerCase();
+    //     li.appendChild(typeNode);
+    //     li.appendChild(matchNode);
+    //     li.appendChild(typeExtendedNode);
+    //   } else {
+    //     li.appendChild(matchNode);
+    //   }
+    //   return li;
+    // }
   }
 
   /**

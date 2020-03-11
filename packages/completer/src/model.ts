@@ -16,7 +16,7 @@ import { StringExt } from '@lumino/algorithm';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { Completer } from './widget';
-
+import { CompletionHandler } from './handler';
 /**
  * An implementation of a completer model.
  */
@@ -171,8 +171,8 @@ export class CompleterModel implements Completer.IModel {
    * #### Notes
    * This is a read-only property.
    */
-  items(): IIterator<Completer.IItem> {
-    return this._filter();
+  items(): CompletionHandler.ICompletionItems {
+    return { isIncomplete: false, items: [] };
   }
 
   /**
