@@ -7,7 +7,7 @@ import { CodeEditor } from '@jupyterlab/codeeditor';
 
 import { IIterator, IterableOrArrayLike, toArray } from '@lumino/algorithm';
 
-import { JSONObject, JSONExt } from '@lumino/coreutils';
+import { JSONObject } from '@lumino/coreutils';
 
 import { IDisposable } from '@lumino/disposable';
 
@@ -49,7 +49,7 @@ const USE_CAPTURE = true;
  * The number of colors defined for the completer type annotations.
  * These are listed in completer/style/index.css#102-152.
  */
-const N_COLORS = 10;
+// const N_COLORS = 10;
 
 /**
  * A widget that enables text completion.
@@ -256,7 +256,7 @@ export class Completer extends Widget {
 
     // Compute an ordered list of all the types in the typeMap, this is computed
     // once by the model each time new data arrives for efficiency.
-    let orderedTypes = model.orderedTypes();
+    // let orderedTypes = model.orderedTypes();
 
     // Populate the completer items.
     for (let item of items) {
@@ -607,6 +607,8 @@ export namespace Completer {
      */
     // items(): IIterator<IItem>;
     items(): CompletionHandler.ICompletionItems;
+
+    setItems(items: CompletionHandler.ICompletionItems): void;
 
     /**
      * Get the unfiltered options in a completer menu.
