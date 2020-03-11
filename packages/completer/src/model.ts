@@ -5,13 +5,13 @@ import {
   IIterator,
   IterableOrArrayLike,
   iter,
-  map,
+  // map,
   toArray
 } from '@lumino/algorithm';
 
 import { JSONExt } from '@lumino/coreutils';
 
-import { StringExt } from '@lumino/algorithm';
+// import { StringExt } from '@lumino/algorithm';
 
 import { ISignal, Signal } from '@lumino/signaling';
 
@@ -172,7 +172,11 @@ export class CompleterModel implements Completer.IModel {
    * This is a read-only property.
    */
   items(): CompletionHandler.ICompletionItems {
-    return { isIncomplete: false, items: [] };
+    return this._items;
+  }
+
+  setItems(items: CompletionHandler.ICompletionItems): void {
+    this._items = items;
   }
 
   /**
@@ -358,29 +362,29 @@ export class CompleterModel implements Completer.IModel {
   /**
    * Apply the query to the complete options list to return the matching subset.
    */
-  private _filter(): IIterator<Completer.IItem> {
-    let options = this._options || [];
-    let query = this._query;
-    if (!query) {
-      return map(options, option => ({ raw: option, text: option }));
-    }
-    let results: Private.IMatch[] = [];
-    for (let option of options) {
-      let match = StringExt.matchSumOfSquares(option, query);
-      if (match) {
-        let marked = StringExt.highlight(option, match.indices, Private.mark);
-        results.push({
-          raw: option,
-          score: match.score,
-          text: marked.join('')
-        });
-      }
-    }
-    return map(results.sort(Private.scoreCmp), result => ({
-      text: result.text,
-      raw: result.raw
-    }));
-  }
+  // private _filter(): IIterator<Completer.IItem> {
+  //   let options = this._options || [];
+  //   let query = this._query;
+  //   if (!query) {
+  //     return map(options, option => ({ raw: option, text: option }));
+  //   }
+  //   let results: Private.IMatch[] = [];
+  //   for (let option of options) {
+  //     let match = StringExt.matchSumOfSquares(option, query);
+  //     if (match) {
+  //       let marked = StringExt.highlight(option, match.indices, Private.mark);
+  //       results.push({
+  //         raw: option,
+  //         score: match.score,
+  //         text: marked.join('')
+  //       });
+  //     }
+  //   }
+  //   return map(results.sort(Private.scoreCmp), result => ({
+  //     text: result.text,
+  //     raw: result.raw
+  //   }));
+  // }
 
   /**
    * Reset the state of the model.
@@ -399,6 +403,7 @@ export class CompleterModel implements Completer.IModel {
   private _current: Completer.ITextState | null = null;
   private _cursor: Completer.ICursorSpan | null = null;
   private _isDisposed = false;
+  private _items: CompletionHandler.ICompletionItems;
   private _options: string[] = [];
   private _original: Completer.ITextState | null = null;
   private _query = '';

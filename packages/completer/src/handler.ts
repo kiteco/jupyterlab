@@ -16,6 +16,7 @@ import { Message, MessageLoop } from '@lumino/messaging';
 import { Signal } from '@lumino/signaling';
 
 import { Completer } from './widget';
+// import { ModelDB } from '@jupyterlab/observables/src';
 
 /**
  * A class added to editors that can host a completer.
@@ -398,14 +399,31 @@ export class CompletionHandler implements IDisposable {
     // Update the original request.
     model.original = state;
 
+    if (reply.items) {
+      model.setItems(reply.items);
+    }
+
     // Dedupe the matches.
     const matches: string[] = [];
     const matchSet = new Set(reply.matches || []);
 
+    const items: CompletionHandler.ICompletionItem[] = [];
+
     if (reply.matches) {
       matchSet.forEach(match => {
         matches.push(match);
+        let item: CompletionHandler.ICompletionItem = {
+          label: match,
+          range: { start: reply.start, end: reply.end },
+          icon: '',
+          resolve: () => {}
+        };
+        items.push(item);
       });
+    }
+
+    if (!reply.items && items.length > 0) {
+      model.setItems({ isIncomplete: false, items });
     }
 
     // Extract the optional type map. The current implementation uses
@@ -523,6 +541,8 @@ export namespace CompletionHandler {
      * Any metadata that accompanies the completion reply.
      */
     metadata: ReadonlyJSONObject;
+
+    items?: ICompletionItems;
   }
 
   /**
