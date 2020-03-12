@@ -226,6 +226,7 @@ export class Completer extends Widget {
       return;
     }
 
+    console.log(model.items());
     let items = model.items().items;
 
     // If there are no items, reset and bail.
