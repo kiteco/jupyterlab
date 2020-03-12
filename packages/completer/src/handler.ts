@@ -414,6 +414,7 @@ export class CompletionHandler implements IDisposable {
         matches.push(match);
         let item: CompletionHandler.ICompletionItem = {
           label: match,
+          type: 'kite',
           range: { start: reply.start, end: reply.end },
           icon: '',
           resolve: () => {}
