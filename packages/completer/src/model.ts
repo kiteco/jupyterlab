@@ -398,6 +398,7 @@ export class CompleterModel implements Completer.IModel {
     this._subsetMatch = false;
     this._typeMap = {};
     this._orderedTypes = [];
+    this._items = { isIncomplete: false, items: [] };
   }
 
   private _current: Completer.ITextState | null = null;
