@@ -5,7 +5,7 @@ import { HoverBox, defaultSanitizer } from '@jupyterlab/apputils';
 
 import { CodeEditor } from '@jupyterlab/codeeditor';
 
-import { IIterator, IterableOrArrayLike, toArray } from '@lumino/algorithm';
+// import { IIterator, IterableOrArrayLike, toArray } from '@lumino/algorithm';
 
 import { JSONObject } from '@lumino/coreutils';
 
@@ -49,7 +49,7 @@ const USE_CAPTURE = true;
  * The number of colors defined for the completer type annotations.
  * These are listed in completer/style/index.css#102-152.
  */
-// const N_COLORS = 10;
+const N_COLORS = 10;
 
 /**
  * A widget that enables text completion.
@@ -226,7 +226,6 @@ export class Completer extends Widget {
       return;
     }
 
-    console.log(model.items());
     let items = model.items().items;
 
     // If there are no items, reset and bail.
@@ -244,9 +243,14 @@ export class Completer extends Widget {
     // We don't test the filtered `items`, as that
     // is too aggressive of completer behavior, it can
     // lead to double typing of an option.
-    const options = toArray(model.options());
-    if (options.length === 1) {
-      this._selected.emit(options[0]);
+    // const options = toArray(model.options());
+    // if (options.length === 1) {
+    //   this._selected.emit(options[0]);
+    //   this.reset();
+    //   return;
+    // }
+    if (items.length === 1) {
+      this._selected.emit(items[0].insertText || items[0].label);
       this.reset();
       return;
     }
@@ -257,11 +261,11 @@ export class Completer extends Widget {
 
     // Compute an ordered list of all the types in the typeMap, this is computed
     // once by the model each time new data arrives for efficiency.
-    // let orderedTypes = model.orderedTypes();
+    let orderedTypes = model.orderedTypes();
 
     // Populate the completer items.
     for (let item of items) {
-      let li = this._renderer.createItemNode(item);
+      let li = this._renderer.createItemNode(item, orderedTypes);
       node.appendChild(li);
     }
 
@@ -614,7 +618,7 @@ export namespace Completer {
     /**
      * Get the unfiltered options in a completer menu.
      */
-    options(): IIterator<string>;
+    // options(): IIterator<string>;
 
     /**
      * The map from identifiers (`a.b`) to their types (function, module, class,
@@ -630,10 +634,10 @@ export namespace Completer {
     /**
      * Set the available options in the completer menu.
      */
-    setOptions(
-      options: IterableOrArrayLike<string>,
-      typeMap?: JSONObject
-    ): void;
+    // setOptions(
+    //   options: IterableOrArrayLike<string>,
+    //   typeMap?: JSONObject
+    // ): void;
 
     /**
      * Handle a cursor change.
@@ -712,7 +716,10 @@ export namespace Completer {
    * A renderer for completer widget nodes.
    */
   export interface IRenderer {
-    createItemNode(item: CompletionHandler.ICompletionItem): HTMLLIElement;
+    createItemNode(
+      item: CompletionHandler.ICompletionItem,
+      orderedTypes: string[]
+    ): HTMLLIElement;
     /**
      * Create an item node (an `li` element) for a text completer menu.
      */
@@ -727,7 +734,10 @@ export namespace Completer {
    * The default implementation of an `IRenderer`.
    */
   export class Renderer implements IRenderer {
-    createItemNode(item: CompletionHandler.ICompletionItem): HTMLLIElement {
+    createItemNode(
+      item: CompletionHandler.ICompletionItem,
+      orderedTypes: string[]
+    ): HTMLLIElement {
       let li = document.createElement('li');
       li.className = ITEM_CLASS;
       // Set the raw, un-marked up value as a data attribute.
@@ -749,8 +759,10 @@ export namespace Completer {
       if (item.type) {
         let typeNode = document.createElement('span');
         let type = item.type;
-        typeNode.textContent = type.toLowerCase();
-        let colorIndex = 1; // TODO: Implement this properly
+        typeNode.textContent = typeNode.textContent = (
+          type[0] || ''
+        ).toLowerCase();
+        let colorIndex = (orderedTypes.indexOf(type) % N_COLORS) + 1;
         typeNode.className = 'jp-Completer-type';
         typeNode.setAttribute(`data-color-index`, colorIndex.toString());
         li.title = type;
