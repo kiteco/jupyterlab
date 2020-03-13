@@ -1,13 +1,13 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import {
-  IIterator,
-  IterableOrArrayLike,
-  iter,
-  // map,
-  toArray
-} from '@lumino/algorithm';
+// import {
+//   IIterator,
+//   IterableOrArrayLike,
+//   iter,
+//   // map,
+//   toArray
+// } from '@lumino/algorithm';
 
 import { JSONExt } from '@lumino/coreutils';
 
@@ -175,16 +175,27 @@ export class CompleterModel implements Completer.IModel {
     return this._items;
   }
 
-  setItems(items: CompletionHandler.ICompletionItems): void {
-    this._items = items;
+  setItems(newValue: CompletionHandler.ICompletionItems): void {
+    const items = newValue.items;
+    if (items === this._items.items) {
+      return;
+    }
+    if (items.length) {
+      this._items = newValue;
+      this._orderedTypes = Private.findOrderedTypes(items);
+    } else {
+      this._typeMap = {};
+      this._orderedTypes = [];
+    }
+    this._stateChanged.emit(undefined);
   }
 
   /**
    * The unfiltered list of all available options in a completer menu.
    */
-  options(): IIterator<string> {
-    return iter(this._options);
-  }
+  // options(): IIterator<string> {
+  //   return iter(this._options);
+  // }
 
   /**
    * The map from identifiers (a.b) to types (function, module, class, instance,
@@ -220,30 +231,30 @@ export class CompleterModel implements Completer.IModel {
   /**
    * Set the available options in the completer menu.
    */
-  setOptions(
-    newValue: IterableOrArrayLike<string>,
-    typeMap?: Completer.TypeMap
-  ) {
-    const values = toArray(newValue || []);
-    const types = typeMap || {};
+  // setOptions(
+  //   newValue: IterableOrArrayLike<string>,
+  //   typeMap?: Completer.TypeMap
+  // ) {
+  //   const values = toArray(newValue || []);
+  //   const types = typeMap || {};
 
-    if (
-      JSONExt.deepEqual(values, this._options) &&
-      JSONExt.deepEqual(types, this._typeMap)
-    ) {
-      return;
-    }
-    if (values.length) {
-      this._options = values;
-      this._typeMap = types;
-      this._orderedTypes = Private.findOrderedTypes(types);
-    } else {
-      this._options = [];
-      this._typeMap = {};
-      this._orderedTypes = [];
-    }
-    this._stateChanged.emit(undefined);
-  }
+  //   if (
+  //     JSONExt.deepEqual(values, this._options) &&
+  //     JSONExt.deepEqual(types, this._typeMap)
+  //   ) {
+  //     return;
+  //   }
+  //   if (values.length) {
+  //     this._options = values;
+  //     this._typeMap = types;
+  //     this._orderedTypes = Private.findOrderedTypes(types);
+  //   } else {
+  //     this._options = [];
+  //     this._typeMap = {};
+  //     this._orderedTypes = [];
+  //   }
+  //   this._stateChanged.emit(undefined);
+  // }
 
   /**
    * Handle a cursor change.
@@ -392,7 +403,7 @@ export class CompleterModel implements Completer.IModel {
   private _reset(): void {
     this._current = null;
     this._cursor = null;
-    this._options = [];
+    // this._options = [];
     this._original = null;
     this._query = '';
     this._subsetMatch = false;
@@ -405,7 +416,7 @@ export class CompleterModel implements Completer.IModel {
   private _cursor: Completer.ICursorSpan | null = null;
   private _isDisposed = false;
   private _items: CompletionHandler.ICompletionItems;
-  private _options: string[] = [];
+  // private _options: string[] = [];
   private _original: Completer.ITextState | null = null;
   private _query = '';
   private _subsetMatch = false;
@@ -485,15 +496,32 @@ namespace Private {
    * ```
    * followed by other types in alphabetical order.
    */
-  export function findOrderedTypes(typeMap: Completer.TypeMap): string[] {
-    const filtered = Object.keys(typeMap)
-      .map(key => typeMap[key])
+  // export function findOrderedTypes(typeMap: Completer.TypeMap): string[] {
+  //   const filtered = Object.keys(typeMap)
+  //     .map(key => typeMap[key])
+  //     .filter(
+  // (value: string | null): value is string =>
+  //   !!value && !(value in KNOWN_MAP)
+  //     )
+  //     .sort((a, b) => a.localeCompare(b));
+
+  //   return KNOWN_TYPES.concat(filtered);
+  // }
+  export function findOrderedTypes(
+    items: CompletionHandler.ICompletionItem[]
+  ): string[] {
+    items.forEach(item => {
+      if (item.type && !KNOWN_TYPES.includes(item.type)) {
+        newTypes.concat(item.type);
+      }
+    });
+    const newTypes = items
+      .map(item => item.type)
       .filter(
-        (value: string | null): value is string =>
+        (value: string | undefined): value is string =>
           !!value && !(value in KNOWN_MAP)
       )
       .sort((a, b) => a.localeCompare(b));
-
-    return KNOWN_TYPES.concat(filtered);
+    return KNOWN_TYPES.concat(newTypes);
   }
 }

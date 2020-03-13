@@ -398,33 +398,15 @@ export class CompletionHandler implements IDisposable {
 
     // Update the original request.
     model.original = state;
+    // Update the cursor.
+    model.cursor = {
+      start: Text.charIndexToJsIndex(reply.start, text),
+      end: Text.charIndexToJsIndex(reply.end, text)
+    };
 
     if (reply.items) {
       model.setItems(reply.items);
-    }
-
-    // Dedupe the matches.
-    const matches: string[] = [];
-    const matchSet = new Set(reply.matches || []);
-
-    const items: CompletionHandler.ICompletionItem[] = [];
-
-    if (reply.matches) {
-      matchSet.forEach(match => {
-        matches.push(match);
-        let item: CompletionHandler.ICompletionItem = {
-          label: match,
-          type: 'kite',
-          range: { start: reply.start, end: reply.end },
-          icon: '',
-          resolve: () => {}
-        };
-        items.push(item);
-      });
-    }
-
-    if (!reply.items && items.length > 0) {
-      model.setItems({ isIncomplete: false, items });
+      return;
     }
 
     // Extract the optional type map. The current implementation uses
@@ -435,7 +417,7 @@ export class CompletionHandler implements IDisposable {
     // been used. Defensively check if it exists.
     const metadata = reply.metadata || {};
     const types = metadata._jupyter_types_experimental as JSONArray;
-    const typeMap: Completer.TypeMap = {};
+    const items: CompletionHandler.ICompletionItem[] = [];
 
     if (types) {
       types.forEach((item: JSONObject) => {
@@ -444,21 +426,38 @@ export class CompletionHandler implements IDisposable {
         // and use undefined to indicate an unknown type.
         const text = item.text as string;
         const type = item.type as string;
-
-        if (matchSet.has(text) && type !== '<unknown>') {
-          typeMap[text] = type;
-        }
+        let completionItem: CompletionHandler.ICompletionItem = {
+          label: text,
+          type: type,
+          range: { start: reply.start, end: reply.end },
+          icon: '',
+          resolve: () => {}
+        };
+        items.push(completionItem);
       });
+      model.setItems({ isIncomplete: false, items });
     }
 
-    // Update the options, including the type map.
-    model.setOptions(matches, typeMap);
+    // Dedupe the matches.
+    // if (reply.matches) {
+    //   matchSet.forEach(match => {
+    //     matches.push(match);
+    //     let item: CompletionHandler.ICompletionItem = {
+    //       label: match,
+    //       range: { start: reply.start, end: reply.end },
+    //       icon: '',
+    //       resolve: () => { }
+    //     };
+    //     items.push(item);
+    //   });
+    // }
 
-    // Update the cursor.
-    model.cursor = {
-      start: Text.charIndexToJsIndex(reply.start, text),
-      end: Text.charIndexToJsIndex(reply.end, text)
-    };
+    // if (!reply.items && items.length > 0) {
+    //   model.setItems({ isIncomplete: false, items });
+    // }
+
+    // Update the options, including the type map.
+    // model.setOptions(matches, typeMap);
   }
 
   private _connector: IDataConnector<
@@ -498,7 +497,7 @@ export namespace CompletionHandler {
 
   export interface ICompletionItems {
     isIncomplete: boolean;
-    items: ReadonlyArray<ICompletionItem>;
+    items: Array<ICompletionItem>;
   }
 
   export interface ICompletionItem {
