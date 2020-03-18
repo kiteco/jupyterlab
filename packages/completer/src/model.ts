@@ -441,14 +441,6 @@ namespace Private {
   const KNOWN_TYPES = ['function', 'instance', 'class', 'module', 'keyword'];
 
   /**
-   * The map of known type annotations of completer matches.
-   */
-  const KNOWN_MAP = KNOWN_TYPES.reduce((acc, type) => {
-    acc[type] = null;
-    return acc;
-  }, {} as Completer.TypeMap);
-
-  /**
    * A filtered completion menu matching result.
    */
   export interface IMatch {
@@ -512,18 +504,13 @@ namespace Private {
   export function findOrderedTypes(
     items: CompletionHandler.ICompletionItem[]
   ): string[] {
+    const newTypes: string[] = [];
     items.forEach(item => {
       if (item.type && !KNOWN_TYPES.includes(item.type)) {
         newTypes.concat(item.type);
       }
     });
-    const newTypes = items
-      .map(item => item.type)
-      .filter(
-        (value: string | undefined): value is string =>
-          !!value && !(value in KNOWN_MAP)
-      )
-      .sort((a, b) => a.localeCompare(b));
+    newTypes.sort((a, b) => a.localeCompare(b));
     return KNOWN_TYPES.concat(newTypes);
   }
 }
