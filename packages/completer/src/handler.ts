@@ -407,11 +407,15 @@ export class CompletionHandler implements IDisposable {
       end: Text.charIndexToJsIndex(reply.end, text)
     };
 
+    // Send ICompletionItems directly to model.
     if (reply.items) {
       model.setItems(reply.items);
       return;
     }
 
+    /**
+     * Transform legacy reply.
+     */
     // Extract the optional type map. The current implementation uses
     // _jupyter_types_experimental which provide string type names. We make no
     // assumptions about the names of the types, so other kernels can provide
@@ -439,27 +443,6 @@ export class CompletionHandler implements IDisposable {
       model.isLegacy = true;
       model.setItems({ isIncomplete: false, items });
     }
-
-    // Dedupe the matches.
-    // if (reply.matches) {
-    //   matchSet.forEach(match => {
-    //     matches.push(match);
-    //     let item: CompletionHandler.ICompletionItem = {
-    //       label: match,
-    //       range: { start: reply.start, end: reply.end },
-    //       icon: '',
-    //       resolve: () => { }
-    //     };
-    //     items.push(item);
-    //   });
-    // }
-
-    // if (!reply.items && items.length > 0) {
-    //   model.setItems({ isIncomplete: false, items });
-    // }
-
-    // Update the options, including the type map.
-    // model.setOptions(matches, typeMap);
   }
 
   private _connector: IDataConnector<
@@ -497,28 +480,96 @@ export namespace CompletionHandler {
     connector: IDataConnector<IReply, void, IRequest>;
   }
 
+  /**
+   * Wrapper object for ICompletionItem.
+   */
   export interface ICompletionItems extends PartialJSONObject {
+    /**
+     * isIncomplete is true if this is a partial list of completion items.
+     */
     isIncomplete: boolean;
+
+    /**
+     * Collection of completion items.
+     */
     items: Array<ICompletionItem>;
   }
 
+  /**
+   * Completion item object based off of LSP CompletionItem
+   */
   export interface ICompletionItem extends PartialJSONObject {
+    /**
+     * User facing completion.
+     * If insertText is not set, this will be inserted.
+     */
     label: string;
+
+    /**
+     * Completion to be inserted.
+     */
     insertText?: string;
+
+    /**
+     * Range to be replaced by this completion.
+     */
     range?: IRange;
+
+    /**
+     * Type of this completion item.
+     */
     type?: string;
+
+    /**
+     * Image url for icon to be rendered with completion type.
+     */
     icon?: string;
+
+    /**
+     * A human-readable string with additional information
+     * about this item, like type or symbol information.
+     */
     documentation?: string;
-    score?: number;
-    // TODO: This is not compatiable with lumino, try to find alternative.
+
+    /**
+     * TODO: This is not compatiable with PartialJSONObject
+     * Callback which can be used for actions such as fetching full documentation.
+     */
     // resolve?: () => void;
+
+    /**
+     * A number used to help sort a set of completion items.
+     */
+    score?: number;
+
+    /**
+     * A string used to help filter a set of completion items.
+     */
     filterText?: string;
+
+    /**
+     * Indicates if the item is deprecated.
+     */
     deprecated?: boolean;
+
+    /**
+     * Any metadata that accompanies this completion item.
+     */
     data?: any;
   }
 
+  /**
+   * Replacement range of completion item.
+   */
   export interface IRange extends PartialJSONObject {
+    /**
+     * The starting index for the substring being replaced by completion.
+     */
     start: number;
+
+    /**
+     * The end index for the substring being replaced by completion.
+     */
     end: number;
   }
 
@@ -546,6 +597,9 @@ export namespace CompletionHandler {
      */
     metadata: ReadonlyJSONObject;
 
+    /**
+     * Hook for extensions to send ICompletionItems.
+     */
     items?: ICompletionItems;
   }
 
