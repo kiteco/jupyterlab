@@ -5,8 +5,6 @@ import { HoverBox, defaultSanitizer } from '@jupyterlab/apputils';
 
 import { CodeEditor } from '@jupyterlab/codeeditor';
 
-// import { IIterator, IterableOrArrayLike, toArray } from '@lumino/algorithm';
-
 import { JSONObject } from '@lumino/coreutils';
 
 import { IDisposable } from '@lumino/disposable';
@@ -243,12 +241,6 @@ export class Completer extends Widget {
     // We don't test the filtered `items`, as that
     // is too aggressive of completer behavior, it can
     // lead to double typing of an option.
-    // const options = toArray(model.options());
-    // if (options.length === 1) {
-    //   this._selected.emit(options[0]);
-    //   this.reset();
-    //   return;
-    // }
     if (items.length === 1) {
       this._selected.emit(items[0].insertText || items[0].label);
       this.reset();
@@ -353,14 +345,14 @@ export class Completer extends Widget {
           return;
         }
         let populated = this._populateSubset();
-        // If there is a common subset in the options,
+        // If there is a common subset in the completions list,
         // then emit a completion signal with that subset.
         if (model.query) {
           model.subsetMatch = true;
           this._selected.emit(model.query);
           model.subsetMatch = false;
         }
-        // If the query changed, update rendering of the options.
+        // If the query changed, update rendering of the completions list.
         if (populated) {
           this.update();
         }
@@ -586,7 +578,7 @@ export namespace Completer {
     current: ITextState | null;
 
     /**
-     * The cursor details that the API has used to return matching options.
+     * The cursor details that the API has used to return matching completions.
      */
     cursor: ICursorSpan | null;
 
@@ -611,17 +603,14 @@ export namespace Completer {
     isLegacy: boolean;
 
     /**
-     * Get the of visible items in the completer menu.
+     * Get the list of visible items in the completer menu.
      */
-    // items(): IIterator<IItem>;
     items(): CompletionHandler.ICompletionItems;
 
-    setItems(items: CompletionHandler.ICompletionItems): void;
-
     /**
-     * Get the unfiltered options in a completer menu.
+     * Set the list of visible items in the completer menu.
      */
-    // options(): IIterator<string>;
+    setItems(items: CompletionHandler.ICompletionItems): void;
 
     /**
      * The map from identifiers (`a.b`) to their types (function, module, class,
@@ -633,14 +622,6 @@ export namespace Completer {
      * An ordered list of types used for visual encoding.
      */
     orderedTypes(): string[];
-
-    /**
-     * Set the available options in the completer menu.
-     */
-    // setOptions(
-    //   options: IterableOrArrayLike<string>,
-    //   typeMap?: JSONObject
-    // ): void;
 
     /**
      * Handle a cursor change.
@@ -686,21 +667,6 @@ export namespace Completer {
   }
 
   /**
-   * A completer menu item.
-   */
-  export interface IItem {
-    /**
-     * The highlighted, marked up text of a visible completer item.
-     */
-    text: string;
-
-    /**
-     * The raw text of a visible completer item.
-     */
-    raw: string;
-  }
-
-  /**
    * A cursor span.
    */
   export interface ICursorSpan extends JSONObject {
@@ -719,18 +685,13 @@ export namespace Completer {
    * A renderer for completer widget nodes.
    */
   export interface IRenderer {
+    /**
+     * Create an item node (an `li` element) for a text completer menu.
+     */
     createItemNode(
       item: CompletionHandler.ICompletionItem,
       orderedTypes: string[]
     ): HTMLLIElement;
-    /**
-     * Create an item node (an `li` element) for a text completer menu.
-     */
-    // createItemNode(
-    //   item: IItem,
-    //   typeMap: TypeMap,
-    //   orderedTypes: string[]
-    // ): HTMLLIElement;
   }
 
   /**
@@ -772,50 +733,8 @@ export namespace Completer {
       } else {
         li.appendChild(matchNode);
       }
-      // Add icons, docs, etc...
       return li;
     }
-
-    /**
-     * Create an item node for a text completer menu.
-     */
-    // createItemNode(
-    //   item: IItem,
-    //   typeMap: TypeMap,
-    //   orderedTypes: string[]
-    // ): HTMLLIElement {
-    //   let li = document.createElement('li');
-    //   li.className = ITEM_CLASS;
-    //   // Set the raw, un-marked up value as a data attribute.
-    //   li.setAttribute('data-value', item.raw);
-
-    //   let matchNode = document.createElement('code');
-    //   matchNode.className = 'jp-Completer-match';
-    //   // Use innerHTML because search results include <mark> tags.
-    //   matchNode.innerHTML = defaultSanitizer.sanitize(item.text, {
-    //     allowedTags: ['mark']
-    //   });
-
-    //   // If there are types provided add those.
-    //   if (!JSONExt.deepEqual(typeMap, {})) {
-    //     let typeNode = document.createElement('span');
-    //     let type = typeMap[item.raw] || '';
-    //     typeNode.textContent = (type[0] || '').toLowerCase();
-    //     let colorIndex = (orderedTypes.indexOf(type) % N_COLORS) + 1;
-    //     typeNode.className = 'jp-Completer-type';
-    //     typeNode.setAttribute(`data-color-index`, colorIndex.toString());
-    //     li.title = type;
-    //     let typeExtendedNode = document.createElement('code');
-    //     typeExtendedNode.className = 'jp-Completer-typeExtended';
-    //     typeExtendedNode.textContent = type.toLocaleLowerCase();
-    //     li.appendChild(typeNode);
-    //     li.appendChild(matchNode);
-    //     li.appendChild(typeExtendedNode);
-    //   } else {
-    //     li.appendChild(matchNode);
-    //   }
-    //   return li;
-    // }
   }
 
   /**

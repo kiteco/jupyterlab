@@ -104,7 +104,7 @@ export class CompleterModel implements Completer.IModel {
   }
 
   /**
-   * The cursor details that the API has used to return matching options.
+   * The cursor details that the API has used to return matching completions.
    */
   get cursor(): Completer.ICursorSpan | null {
     return this._cursor;
@@ -164,10 +164,7 @@ export class CompleterModel implements Completer.IModel {
    * This is a read-only property.
    */
   items(): CompletionHandler.ICompletionItems {
-    // Possibly sort here
-    // if (this.isLegacy) {
-    // }
-    this._filter();
+    this._markup();
     if (this.isLegacy) {
       this._dedupe();
       this._sort();
@@ -175,6 +172,10 @@ export class CompleterModel implements Completer.IModel {
     return this._items;
   }
 
+  /**
+   * Set the list of visible items in the completer menu, and append any
+   * new types to KNOWN_TYPES.
+   */
   setItems(newValue: CompletionHandler.ICompletionItems): void {
     if (JSONExt.deepEqual(newValue, this._items)) {
       return;
@@ -192,13 +193,6 @@ export class CompleterModel implements Completer.IModel {
   set isLegacy(newValue: boolean) {
     this._isLegacy = newValue;
   }
-
-  /**
-   * The unfiltered list of all available options in a completer menu.
-   */
-  // options(): IIterator<string> {
-  //   return iter(this._options);
-  // }
 
   /**
    * The map from identifiers (a.b) to types (function, module, class, instance,
@@ -230,34 +224,6 @@ export class CompleterModel implements Completer.IModel {
   orderedTypes(): string[] {
     return this._orderedTypes;
   }
-
-  /**
-   * Set the available options in the completer menu.
-   */
-  // setOptions(
-  //   newValue: IterableOrArrayLike<string>,
-  //   typeMap?: Completer.TypeMap
-  // ) {
-  //   const values = toArray(newValue || []);
-  //   const types = typeMap || {};
-
-  //   if (
-  //     JSONExt.deepEqual(values, this._options) &&
-  //     JSONExt.deepEqual(types, this._typeMap)
-  //   ) {
-  //     return;
-  //   }
-  //   if (values.length) {
-  //     this._options = values;
-  //     this._typeMap = types;
-  //     this._orderedTypes = Private.findOrderedTypes(types);
-  //   } else {
-  //     this._options = [];
-  //     this._typeMap = {};
-  //     this._orderedTypes = [];
-  //   }
-  //   this._stateChanged.emit(undefined);
-  // }
 
   /**
    * Handle a cursor change.
@@ -363,7 +329,7 @@ export class CompleterModel implements Completer.IModel {
    * @param hard - Reset even if a subset match is in progress.
    */
   reset(hard = false) {
-    // When the completer detects a common subset prefix for all options,
+    // When the completer detects a common subset prefix for all completions,
     // it updates the model and sets the model source to that value, triggering
     // a reset. Unless explicitly a hard reset, this should be ignored.
     if (!hard && this._subsetMatch) {
@@ -373,7 +339,12 @@ export class CompleterModel implements Completer.IModel {
     this._stateChanged.emit(undefined);
   }
 
-  private _filter(): void {
+  /**
+   * Check if item matches against query
+   * Highlight matching prefix by adding <mark> tags
+   * Add score property based on how closely the prefix matches query.
+   */
+  private _markup(): void {
     let query = this._query;
     if (!query) {
       return;
@@ -404,6 +375,9 @@ export class CompleterModel implements Completer.IModel {
     this._items.items = results;
   }
 
+  /**
+   * Dedupe any items that have the same label.
+   */
   private _dedupe(): void {
     let items = (this._items && this._items.items) || [];
     let itemSet = new Set();
@@ -417,6 +391,9 @@ export class CompleterModel implements Completer.IModel {
     this._items.items = items;
   }
 
+  /**
+   * Sort ICompletionItem based on its score attribute.
+   */
   private _sort(): void {
     let items = (this._items && this._items.items) || [];
     items.sort(Private.scoreCmp);
@@ -429,7 +406,6 @@ export class CompleterModel implements Completer.IModel {
   private _reset(): void {
     this._current = null;
     this._cursor = null;
-    // this._options = [];
     this._original = null;
     this._query = '';
     this._subsetMatch = false;
@@ -447,7 +423,6 @@ export class CompleterModel implements Completer.IModel {
     items: []
   };
   private _isLegacy = false;
-  // private _options: string[] = [];
   private _original: Completer.ITextState | null = null;
   private _query = '';
   private _subsetMatch = false;
@@ -534,17 +509,6 @@ namespace Private {
    * ```
    * followed by other types in alphabetical order.
    */
-  // export function findOrderedTypes(typeMap: Completer.TypeMap): string[] {
-  //   const filtered = Object.keys(typeMap)
-  //     .map(key => typeMap[key])
-  //     .filter(
-  // (value: string | null): value is string =>
-  //   !!value && !(value in KNOWN_MAP)
-  //     )
-  //     .sort((a, b) => a.localeCompare(b));
-
-  //   return KNOWN_TYPES.concat(filtered);
-  // }
   export function findOrderedTypes(
     items: CompletionHandler.ICompletionItem[]
   ): string[] {
