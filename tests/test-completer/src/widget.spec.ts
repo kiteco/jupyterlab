@@ -15,7 +15,11 @@ import { CodeEditor, CodeEditorWrapper } from '@jupyterlab/codeeditor';
 
 import { CodeMirrorEditor } from '@jupyterlab/codemirror';
 
-import { Completer, CompleterModel } from '@jupyterlab/completer';
+import {
+  Completer,
+  CompleterModel,
+  CompletionHandler
+} from '@jupyterlab/completer';
 
 import { framePromise, sleep } from '@jupyterlab/testutils';
 
@@ -35,11 +39,10 @@ function createEditorWidget(): CodeEditorWrapper {
 
 class CustomRenderer extends Completer.Renderer {
   createItemNode(
-    item: Completer.IItem,
-    typeMap: Completer.TypeMap,
+    item: CompletionHandler.ICompletionItem,
     orderedTypes: string[]
   ): HTMLLIElement {
-    let li = super.createItemNode(item, typeMap, orderedTypes);
+    let li = super.createItemNode(item, orderedTypes);
     li.classList.add(TEST_ITEM_CLASS);
     return li;
   }
@@ -75,7 +78,7 @@ describe('completer/widget', () => {
         expect(Array.from(widget.node.classList)).to.contain('jp-Completer');
       });
 
-      it('should accept options with a model', () => {
+      it('should accept items with a model', () => {
         let options: Completer.IOptions = {
           editor: null,
           model: new CompleterModel()
@@ -85,13 +88,16 @@ describe('completer/widget', () => {
         expect(widget.model).to.equal(options.model);
       });
 
-      it('should accept options with a renderer', () => {
+      it('should accept items with a renderer', () => {
         let options: Completer.IOptions = {
           editor: null,
           model: new CompleterModel(),
           renderer: new CustomRenderer()
         };
-        options.model!.setOptions(['foo', 'bar']);
+        options.model!.setItems({
+          isIncomplete: false,
+          items: [{ label: 'foo' }, { label: 'bar' }]
+        });
 
         let widget = new Completer(options);
         expect(widget).to.be.an.instanceof(Completer);
@@ -114,7 +120,10 @@ describe('completer/widget', () => {
         let listener = (sender: any, selected: string) => {
           value = selected;
         };
-        options.model!.setOptions(['foo', 'bar']);
+        options.model!.setItems({
+          isIncomplete: false,
+          items: [{ label: 'foo' }, { label: 'bar' }]
+        });
         Widget.attach(anchor, document.body);
 
         let widget = new Completer(options);
@@ -163,7 +172,15 @@ describe('completer/widget', () => {
 
         model.original = request;
         model.cursor = { start: 0, end: 1 };
-        model.setOptions(['abc', 'abd', 'abe', 'abi']);
+        model.setItems({
+          isIncomplete: false,
+          items: [
+            { label: 'abc' },
+            { label: 'abd' },
+            { label: 'abe' },
+            { label: 'abi' }
+          ]
+        });
 
         let widget = new Completer({ model, editor: code.editor });
         widget.hide();
@@ -253,7 +270,13 @@ describe('completer/widget', () => {
           editor: anchor.editor,
           model
         };
-        model.setOptions(['foo', 'bar'], { foo: 'instance', bar: 'function' });
+        model.setItems({
+          isIncomplete: false,
+          items: [
+            { label: 'foo', type: 'instance' },
+            { label: 'bar', type: 'function' }
+          ]
+        });
         Widget.attach(anchor, document.body);
 
         let widget = new Completer(options);
@@ -261,11 +284,11 @@ describe('completer/widget', () => {
         Widget.attach(widget, document.body);
         MessageLoop.sendMessage(widget, Widget.Msg.UpdateRequest);
         expect(widget.isHidden).to.equal(false);
-        expect(model.options).to.be.ok;
+        expect(model.items().items.length).to.be.greaterThan(0);
         widget.reset();
         MessageLoop.sendMessage(widget, Widget.Msg.UpdateRequest);
         expect(widget.isHidden).to.equal(true);
-        expect(model.options().next()).to.be.undefined;
+        expect(model.items().items.length).to.equal(0);
         widget.dispose();
         anchor.dispose();
       });
@@ -293,9 +316,12 @@ describe('completer/widget', () => {
             editor: anchor.editor,
             model
           };
-          model.setOptions(['foo', 'bar'], {
-            foo: 'instance',
-            bar: 'function'
+          model.setItems({
+            isIncomplete: false,
+            items: [
+              { label: 'foo', type: 'instance' },
+              { label: 'bar', type: 'function' }
+            ]
           });
           Widget.attach(anchor, document.body);
 
@@ -304,11 +330,17 @@ describe('completer/widget', () => {
           Widget.attach(widget, document.body);
           MessageLoop.sendMessage(widget, Widget.Msg.UpdateRequest);
           expect(widget.isHidden).to.equal(false);
-          expect(model.options).to.be.ok;
+          expect(model.items()).to.not.be.deep.equal({
+            isIncomplete: false,
+            items: []
+          });
           simulate(document.body, 'keydown', { keyCode: 70 }); // F
           MessageLoop.sendMessage(widget, Widget.Msg.UpdateRequest);
           expect(widget.isHidden).to.equal(true);
-          expect(model.options().next()).to.be.undefined;
+          expect(model.items()).to.be.deep.equal({
+            isIncomplete: false,
+            items: []
+          });
           widget.dispose();
           anchor.dispose();
         });
@@ -320,10 +352,15 @@ describe('completer/widget', () => {
             editor: anchor.editor,
             model
           };
-          model.setOptions(['foo', 'bar', 'baz'], {
-            foo: 'instance',
-            bar: 'function'
+          model.setItems({
+            isIncomplete: false,
+            items: [
+              { label: 'foo', type: 'instance' },
+              { label: 'bar', type: 'function' },
+              { label: 'baz' }
+            ]
           });
+
           Widget.attach(anchor, document.body);
 
           let widget = new Completer(options);
@@ -361,9 +398,13 @@ describe('completer/widget', () => {
             editor: anchor.editor,
             model
           };
-          model.setOptions(['foo', 'bar', 'baz'], {
-            foo: 'instance',
-            bar: 'function'
+          model.setItems({
+            isIncomplete: false,
+            items: [
+              { label: 'foo', type: 'instance' },
+              { label: 'bar', type: 'function' },
+              { label: 'baz' }
+            ]
           });
           Widget.attach(anchor, document.body);
 
@@ -412,9 +453,14 @@ describe('completer/widget', () => {
           let listener = (sender: any, selected: string) => {
             value = selected;
           };
-          model.setOptions(['fo', 'foo', 'foo', 'fooo'], {
-            foo: 'instance',
-            bar: 'function'
+          model.setItems({
+            isIncomplete: false,
+            items: [
+              { label: 'fo', type: 'instance' },
+              { label: 'foo', type: 'function' },
+              { label: 'foo' },
+              { label: 'fooo' }
+            ]
           });
           Widget.attach(anchor, document.body);
 
@@ -424,7 +470,9 @@ describe('completer/widget', () => {
           Widget.attach(widget, document.body);
           MessageLoop.sendMessage(widget, Widget.Msg.UpdateRequest);
           await framePromise();
+
           let marked = widget.node.querySelectorAll(`.${ITEM_CLASS} mark`);
+
           expect(value).to.be.empty;
           expect(marked).to.have.length(4);
           expect(marked[0].textContent).to.equal('fo');
@@ -451,10 +499,16 @@ describe('completer/widget', () => {
           let listener = (sender: any, selected: string) => {
             value = selected;
           };
-          model.setOptions(['foo', 'bar', 'baz'], {
-            foo: 'instance',
-            bar: 'function'
+          model.setItems({
+            isIncomplete: false,
+            items: [
+              { label: 'foo', type: 'instance' },
+              { label: 'bar', type: 'function' },
+              { label: 'baz' }
+            ]
           });
+          model.isLegacy = true;
+
           model.query = 'b';
           Widget.attach(anchor, document.body);
 
@@ -485,7 +539,10 @@ describe('completer/widget', () => {
           let listener = (sender: any, selected: string) => {
             value = selected;
           };
-          model.setOptions(['foo', 'bar']);
+          model.setItems({
+            isIncomplete: false,
+            items: [{ label: 'foo' }, { label: 'bar' }]
+          });
           Widget.attach(anchor, document.body);
 
           let widget = new Completer(options);
@@ -511,7 +568,10 @@ describe('completer/widget', () => {
           let listener = (sender: any, selected: string) => {
             value = selected;
           };
-          model.setOptions(['foo', 'bar']);
+          model.setItems({
+            isIncomplete: false,
+            items: [{ label: 'foo' }, { label: 'bar' }]
+          });
           Widget.attach(anchor, document.body);
 
           let widget = new Completer(options);
@@ -536,7 +596,10 @@ describe('completer/widget', () => {
           let listener = (sender: any, selected: string) => {
             // no op
           };
-          model.setOptions(['foo', 'bar']);
+          model.setItems({
+            isIncomplete: false,
+            items: [{ label: 'foo' }, { label: 'bar' }]
+          });
           Widget.attach(anchor, document.body);
 
           let widget = new Completer(options);
@@ -595,7 +658,15 @@ describe('completer/widget', () => {
 
           model.original = request;
           model.cursor = { start: text.length - 1, end: text.length };
-          model.setOptions(['abc', 'abd', 'abe', 'abi']);
+          model.setItems({
+            isIncomplete: false,
+            items: [
+              { label: 'abc' },
+              { label: 'abd' },
+              { label: 'abe' },
+              { label: 'abi' }
+            ]
+          });
 
           let widget = new Completer({ model, editor: code.editor });
           Widget.attach(widget, document.body);
@@ -640,7 +711,10 @@ describe('completer/widget', () => {
 
         Widget.attach(anchor, document.body);
         model.original = request;
-        model.setOptions(['foo']);
+        model.setItems({
+          isIncomplete: false,
+          items: [{ label: 'foo' }]
+        });
 
         let widget = new Completer(options);
         widget.selected.connect(listener);
@@ -679,7 +753,10 @@ describe('completer/widget', () => {
 
         Widget.attach(anchor, document.body);
         model.original = request;
-        model.setOptions(['foo', 'bar', 'baz']);
+        model.setItems({
+          isIncomplete: false,
+          items: [{ label: 'foo' }, { label: 'bar' }, { label: 'baz' }]
+        });
 
         let widget = new Completer(options);
         widget.hide();

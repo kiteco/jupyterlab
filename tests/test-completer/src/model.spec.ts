@@ -3,13 +3,17 @@
 
 import { expect } from 'chai';
 
-import { toArray } from '@lumino/algorithm';
+// import { toArray } from '@lumino/algorithm';
 
-import { JSONExt } from '@lumino/coreutils';
+// import { JSONExt } from '@lumino/coreutils';
 
 import { CodeEditor } from '@jupyterlab/codeeditor';
 
-import { CompleterModel, Completer } from '@jupyterlab/completer';
+import {
+  CompleterModel,
+  Completer,
+  CompletionHandler
+} from '@jupyterlab/completer';
 
 function makeState(text: string): Completer.ITextState {
   return {
@@ -32,7 +36,7 @@ describe('completer/model', () => {
     });
 
     describe('#stateChanged', () => {
-      it('should signal when model options have changed', () => {
+      it('should signal when model items have changed', () => {
         let model = new CompleterModel();
         let called = 0;
         let listener = (sender: any, args: void) => {
@@ -40,13 +44,17 @@ describe('completer/model', () => {
         };
         model.stateChanged.connect(listener);
         expect(called).to.equal(0);
-        model.setOptions(['foo']);
+        model.setItems({ isIncomplete: false, items: [{ label: 'foo' }] });
         expect(called).to.equal(1);
-        model.setOptions(['foo'], { foo: 'instance' });
+        model.setItems({ isIncomplete: false, items: [{ label: 'foo' }] });
+        model.setItems({
+          isIncomplete: false,
+          items: [{ label: 'foo' }, { label: 'bar' }]
+        });
         expect(called).to.equal(2);
       });
 
-      it('should not signal when options have not changed', () => {
+      it('should not signal when items have not changed', () => {
         let model = new CompleterModel();
         let called = 0;
         let listener = (sender: any, args: void) => {
@@ -54,14 +62,21 @@ describe('completer/model', () => {
         };
         model.stateChanged.connect(listener);
         expect(called).to.equal(0);
-        model.setOptions(['foo']);
-        model.setOptions(['foo']);
+        model.setItems({ isIncomplete: false, items: [{ label: 'foo' }] });
+        model.setItems({ isIncomplete: false, items: [{ label: 'foo' }] });
         expect(called).to.equal(1);
-        model.setOptions(['foo'], { foo: 'instance' });
-        model.setOptions(['foo'], { foo: 'instance' });
+        model.setItems({
+          isIncomplete: false,
+          items: [{ label: 'foo' }, { label: 'bar' }]
+        });
+        model.setItems({
+          isIncomplete: false,
+          items: [{ label: 'foo' }, { label: 'bar' }]
+        });
         expect(called).to.equal(2);
-        model.setOptions([], {});
-        model.setOptions([], {});
+        model.setItems({ isIncomplete: false, items: [] });
+        model.setItems({ isIncomplete: false, items: [] });
+        model.setItems({ isIncomplete: false, items: [] });
         expect(called).to.equal(3);
       });
 
@@ -145,68 +160,93 @@ describe('completer/model', () => {
     describe('#items()', () => {
       it('should return an unfiltered list of items if query is blank', () => {
         let model = new CompleterModel();
-        let want: Completer.IItem[] = [
-          { raw: 'foo', text: 'foo' },
-          { raw: 'bar', text: 'bar' },
-          { raw: 'baz', text: 'baz' }
+        let want: CompletionHandler.ICompletionItem[] = [
+          { label: 'foo' },
+          { label: 'bar' },
+          { label: 'baz' }
         ];
-        model.setOptions(['foo', 'bar', 'baz']);
-        expect(toArray(model.items())).to.deep.equal(want);
+        model.setItems({
+          isIncomplete: false,
+          items: [{ label: 'foo' }, { label: 'bar' }, { label: 'baz' }]
+        });
+        expect(model.items().items).to.deep.equal(want);
       });
-
       it('should return a filtered list of items if query is set', () => {
         let model = new CompleterModel();
-        let want: Completer.IItem[] = [
-          { raw: 'foo', text: '<mark>f</mark>oo' }
-        ];
-        model.setOptions(['foo', 'bar', 'baz']);
+        let want: CompletionHandler.ICompletionItem = {
+          label: '<mark>f</mark>oo',
+          insertText: 'foo'
+        };
+        model.setItems({
+          isIncomplete: false,
+          items: [
+            { label: 'foo', insertText: 'foo' },
+            { label: 'bar', insertText: 'bar' },
+            { label: 'baz', insertText: 'baz' }
+          ]
+        });
         model.query = 'f';
-        expect(toArray(model.items())).to.deep.equal(want);
+        const items = model.items().items;
+        expect(items.length).equal(1);
+        expect(items[0]).to.include({
+          label: want.label,
+          insertText: want.insertText
+        });
       });
-
       it('should order list based on score', () => {
         let model = new CompleterModel();
-        let want: Completer.IItem[] = [
-          { raw: 'qux', text: '<mark>qux</mark>' },
-          { raw: 'quux', text: '<mark>qu</mark>u<mark>x</mark>' }
+        let want: CompletionHandler.ICompletionItem[] = [
+          { insertText: 'qux', label: '<mark>qux</mark>' },
+          { insertText: 'quux', label: '<mark>qu</mark>u<mark>x</mark>' }
         ];
-        model.setOptions(['foo', 'bar', 'baz', 'quux', 'qux']);
+        model.setItems({
+          isIncomplete: false,
+          items: [
+            { label: 'foo', insertText: 'foo' },
+            { label: 'bar', insertText: 'bar' },
+            { label: 'baz', insertText: 'baz' },
+            { label: 'quux', insertText: 'quux' },
+            { label: 'qux', insertText: 'qux' }
+          ]
+        });
+        model.isLegacy = true;
         model.query = 'qux';
-        expect(toArray(model.items())).to.deep.equal(want);
+        const items = model.items().items;
+        expect(items.length).to.equal(want.length);
+        for (let index = 0; index < items.length; index++) {
+          const item = items[index];
+          expect(item).to.include({
+            label: want[index].label,
+            insertText: want[index].insertText
+          });
+        }
       });
-
       it('should break ties in score by locale sort', () => {
         let model = new CompleterModel();
-        let want: Completer.IItem[] = [
-          { raw: 'quux', text: '<mark>qu</mark>ux' },
-          { raw: 'qux', text: '<mark>qu</mark>x' }
+        let want: CompletionHandler.ICompletionItem[] = [
+          { insertText: 'quux', label: '<mark>qu</mark>ux' },
+          { insertText: 'qux', label: '<mark>qu</mark>x' }
         ];
-        model.setOptions(['foo', 'bar', 'baz', 'qux', 'quux']);
+        model.setItems({
+          isIncomplete: false,
+          items: [
+            { label: 'foo', insertText: 'foo' },
+            { label: 'bar', insertText: 'bar' },
+            { label: 'baz', insertText: 'baz' },
+            { label: 'quux', insertText: 'quux' },
+            { label: 'qux', insertText: 'qux' }
+          ]
+        });
         model.query = 'qu';
-        expect(toArray(model.items())).to.deep.equal(want);
-      });
-    });
-
-    describe('#options()', () => {
-      it('should default to an empty iterator', () => {
-        let model = new CompleterModel();
-        expect(model.options().next()).to.be.undefined;
-      });
-
-      it('should return model options', () => {
-        let model = new CompleterModel();
-        let options = ['foo'];
-        model.setOptions(options, {});
-        expect(toArray(model.options())).to.not.equal(options);
-        expect(toArray(model.options())).to.deep.equal(options);
-      });
-
-      it('should return the typeMap', () => {
-        let model = new CompleterModel();
-        let options = ['foo'];
-        let typeMap = { foo: 'instance' };
-        model.setOptions(options, typeMap);
-        expect(JSONExt.deepEqual(model.typeMap(), typeMap)).to.be.ok;
+        const items = model.items().items;
+        expect(items.length).to.equal(want.length);
+        for (let index = 0; index < items.length; index++) {
+          const item = items[index];
+          expect(item).to.include({
+            label: want[index].label,
+            insertText: want[index].insertText
+          });
+        }
       });
     });
 
@@ -276,7 +316,7 @@ describe('completer/model', () => {
         model.current = change;
         expect(model.current).to.be.null;
         expect(model.original).to.be.null;
-        expect(model.options().next()).to.be.undefined;
+        expect(model.items()).to.deep.equal({ isIncomplete: false, items: [] });
       });
     });
 
@@ -310,7 +350,7 @@ describe('completer/model', () => {
     describe('#dispose()', () => {
       it('should dispose of the model resources', () => {
         let model = new CompleterModel();
-        model.setOptions(['foo'], { foo: 'instance' });
+        model.setItems({ isIncomplete: false, items: [{ label: 'foo' }] });
         expect(model.isDisposed).to.equal(false);
         model.dispose();
         expect(model.isDisposed).to.equal(true);
