@@ -165,7 +165,6 @@ export class CompleterModel implements Completer.IModel {
    */
   items(): CompletionHandler.ICompletionItems {
     this._markup();
-    console.log('isLegacy:', this.isLegacy);
     if (this.isLegacy) {
       this._dedupe();
       this._sort();
