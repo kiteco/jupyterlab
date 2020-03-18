@@ -7,7 +7,12 @@ import { Text } from '@jupyterlab/coreutils';
 
 import { IDataConnector } from '@jupyterlab/statedb';
 
-import { ReadonlyJSONObject, JSONObject, JSONArray } from '@lumino/coreutils';
+import {
+  ReadonlyJSONObject,
+  JSONObject,
+  JSONArray,
+  PartialJSONObject
+} from '@lumino/coreutils';
 
 import { IDisposable } from '@lumino/disposable';
 
@@ -16,7 +21,6 @@ import { Message, MessageLoop } from '@lumino/messaging';
 import { Signal } from '@lumino/signaling';
 
 import { Completer } from './widget';
-// import { ModelDB } from '@jupyterlab/observables/src';
 
 /**
  * A class added to editors that can host a completer.
@@ -310,7 +314,6 @@ export class CompletionHandler implements IDisposable {
     if (start.column !== end.column || start.line !== end.line) {
       return;
     }
-
     // Dispatch the text change.
     model.handleTextChange(this.getState(editor, editor.getCursorPosition()));
   }
@@ -429,12 +432,11 @@ export class CompletionHandler implements IDisposable {
         let completionItem: CompletionHandler.ICompletionItem = {
           label: text,
           type: type,
-          range: { start: reply.start, end: reply.end },
-          icon: '',
-          resolve: () => {}
+          range: { start: reply.start, end: reply.end }
         };
         items.push(completionItem);
       });
+      model.isLegacy = true;
       model.setItems({ isIncomplete: false, items });
     }
 
@@ -495,25 +497,27 @@ export namespace CompletionHandler {
     connector: IDataConnector<IReply, void, IRequest>;
   }
 
-  export interface ICompletionItems {
+  export interface ICompletionItems extends PartialJSONObject {
     isIncomplete: boolean;
     items: Array<ICompletionItem>;
   }
 
-  export interface ICompletionItem {
+  export interface ICompletionItem extends PartialJSONObject {
     label: string;
     insertText?: string;
-    range: IRange;
+    range?: IRange;
     type?: string;
-    icon: string;
+    icon?: string;
     documentation?: string;
-    resolve(): void;
+    score?: number;
+    // TODO: This is not compatiable with lumino, try to find alternative.
+    // resolve?: () => void;
     filterText?: string;
     deprecated?: boolean;
     data?: any;
   }
 
-  export interface IRange {
+  export interface IRange extends PartialJSONObject {
     start: number;
     end: number;
   }

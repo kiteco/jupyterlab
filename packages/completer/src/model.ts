@@ -1,17 +1,9 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-// import {
-//   IIterator,
-//   IterableOrArrayLike,
-//   iter,
-//   // map,
-//   toArray
-// } from '@lumino/algorithm';
-
 import { JSONExt } from '@lumino/coreutils';
 
-// import { StringExt } from '@lumino/algorithm';
+import { StringExt } from '@lumino/algorithm';
 
 import { ISignal, Signal } from '@lumino/signaling';
 
@@ -172,22 +164,33 @@ export class CompleterModel implements Completer.IModel {
    * This is a read-only property.
    */
   items(): CompletionHandler.ICompletionItems {
+    // Possibly sort here
+    // if (this.isLegacy) {
+    // }
+    this._filter();
+    if (this.isLegacy) {
+      this._dedupe();
+      this._sort();
+    }
     return this._items;
   }
 
   setItems(newValue: CompletionHandler.ICompletionItems): void {
-    const items = newValue.items;
-    if (items === this._items.items) {
+    if (JSONExt.deepEqual(newValue, this._items)) {
       return;
     }
-    if (items.length) {
-      this._items = newValue;
-      this._orderedTypes = Private.findOrderedTypes(items);
-    } else {
-      this._typeMap = {};
-      this._orderedTypes = [];
-    }
+    const items = newValue.items;
+    this._items = newValue;
+    this._orderedTypes = Private.findOrderedTypes(items);
     this._stateChanged.emit(undefined);
+  }
+
+  get isLegacy(): boolean {
+    return this._isLegacy;
+  }
+
+  set isLegacy(newValue: boolean) {
+    this._isLegacy = newValue;
   }
 
   /**
@@ -370,32 +373,55 @@ export class CompleterModel implements Completer.IModel {
     this._stateChanged.emit(undefined);
   }
 
-  /**
-   * Apply the query to the complete options list to return the matching subset.
-   */
-  // private _filter(): IIterator<Completer.IItem> {
-  //   let options = this._options || [];
-  //   let query = this._query;
-  //   if (!query) {
-  //     return map(options, option => ({ raw: option, text: option }));
-  //   }
-  //   let results: Private.IMatch[] = [];
-  //   for (let option of options) {
-  //     let match = StringExt.matchSumOfSquares(option, query);
-  //     if (match) {
-  //       let marked = StringExt.highlight(option, match.indices, Private.mark);
-  //       results.push({
-  //         raw: option,
-  //         score: match.score,
-  //         text: marked.join('')
-  //       });
-  //     }
-  //   }
-  //   return map(results.sort(Private.scoreCmp), result => ({
-  //     text: result.text,
-  //     raw: result.raw
-  //   }));
-  // }
+  private _filter(): void {
+    let query = this._query;
+    if (!query) {
+      return;
+    }
+    let items = (this._items && this._items.items) || [];
+    let results: CompletionHandler.ICompletionItem[] = [];
+    for (let item of items) {
+      // See if insert text matches query string
+      let match = StringExt.matchSumOfSquares(
+        item.insertText || item.label,
+        query
+      );
+      if (match) {
+        // Highlight label text if there's a match
+        let marked = StringExt.highlight(
+          item.label,
+          match.indices,
+          Private.mark
+        );
+        if (!item.insertText) {
+          item.insertText = item.label;
+        }
+        item.label = marked.join('');
+        item.score = match.score;
+        results.push(item);
+      }
+    }
+    this._items.items = results;
+  }
+
+  private _dedupe(): void {
+    let items = (this._items && this._items.items) || [];
+    let itemSet = new Set();
+    items.filter(item => {
+      if (!itemSet.has(item.label)) {
+        itemSet.add(item.label);
+        return true;
+      }
+      return false;
+    });
+    this._items.items = items;
+  }
+
+  private _sort(): void {
+    let items = (this._items && this._items.items) || [];
+    items.sort(Private.scoreCmp);
+    this._items.items = items;
+  }
 
   /**
    * Reset the state of the model.
@@ -410,12 +436,17 @@ export class CompleterModel implements Completer.IModel {
     this._typeMap = {};
     this._orderedTypes = [];
     this._items = { isIncomplete: false, items: [] };
+    this._isLegacy = false;
   }
 
   private _current: Completer.ITextState | null = null;
   private _cursor: Completer.ICursorSpan | null = null;
   private _isDisposed = false;
-  private _items: CompletionHandler.ICompletionItems;
+  private _items: CompletionHandler.ICompletionItems = {
+    isIncomplete: false,
+    items: []
+  };
+  private _isLegacy = false;
   // private _options: string[] = [];
   private _original: Completer.ITextState | null = null;
   private _query = '';
@@ -478,12 +509,19 @@ namespace Private {
    * This orders the items first based on score (lower is better), then
    * by locale order of the item text.
    */
-  export function scoreCmp(a: IMatch, b: IMatch): number {
-    let delta = a.score - b.score;
-    if (delta !== 0) {
-      return delta;
+  export function scoreCmp(
+    a: CompletionHandler.ICompletionItem,
+    b: CompletionHandler.ICompletionItem
+  ): number {
+    if (a.score && b.score) {
+      let delta = a.score - b.score;
+      if (delta !== 0) {
+        return delta;
+      }
     }
-    return a.raw.localeCompare(b.raw);
+    return (
+      (a.insertText || a.label).localeCompare(b.insertText || b.label) || 0
+    );
   }
 
   /**

@@ -281,7 +281,6 @@ export class Completer extends Widget {
         return;
       }
     }
-
     if (this.isHidden) {
       this.show();
       this._setGeometry();
@@ -462,7 +461,6 @@ export class Completer extends Widget {
     const items = this.node.querySelectorAll(`.${ITEM_CLASS}`);
     const subset = Private.commonSubset(Private.itemValues(items));
     const { query } = model;
-
     // If a common subset exists and it is not the current query, highlight it.
     if (subset && subset !== query && subset.indexOf(query) === 0) {
       model.query = subset;
@@ -608,6 +606,11 @@ export namespace Completer {
     query: string;
 
     /**
+     * A flag that is true when completions are generated from the legacy completer API.
+     */
+    isLegacy: boolean;
+
+    /**
      * Get the of visible items in the completer menu.
      */
     // items(): IIterator<IItem>;
@@ -741,13 +744,7 @@ export namespace Completer {
       let li = document.createElement('li');
       li.className = ITEM_CLASS;
       // Set the raw, un-marked up value as a data attribute.
-      let dataValue: string;
-      if (item.insertText) {
-        dataValue = item.insertText;
-      } else {
-        dataValue = item.label;
-      }
-      li.setAttribute('data-value', dataValue);
+      li.setAttribute('data-value', item.insertText || item.label);
 
       let matchNode = document.createElement('code');
       matchNode.className = 'jp-Completer-match';
