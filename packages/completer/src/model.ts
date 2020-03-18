@@ -165,6 +165,7 @@ export class CompleterModel implements Completer.IModel {
    */
   items(): CompletionHandler.ICompletionItems {
     this._markup();
+    console.log('isLegacy:', this.isLegacy);
     if (this.isLegacy) {
       this._dedupe();
       this._sort();
@@ -504,12 +505,16 @@ namespace Private {
   export function findOrderedTypes(
     items: CompletionHandler.ICompletionItem[]
   ): string[] {
-    const newTypes: string[] = [];
+    const newTypeSet = new Set<string>();
     items.forEach(item => {
-      if (item.type && !KNOWN_TYPES.includes(item.type)) {
-        newTypes.concat(item.type);
+      if (
+        (item.type && !KNOWN_TYPES.includes(item.type)) ||
+        !newTypeSet.has(item.type!)
+      ) {
+        newTypeSet.add(item.type!);
       }
     });
+    const newTypes = Array.from(newTypeSet);
     newTypes.sort((a, b) => a.localeCompare(b));
     return KNOWN_TYPES.concat(newTypes);
   }
