@@ -443,10 +443,20 @@ export class CompletionHandler implements IDisposable {
         };
         items.push(completionItem);
       });
-      model.isLegacy = true;
-      items = this._dedupe(items);
-      model.setItems({ isIncomplete: false, items });
+    } else {
+      // Fallback to matches if types is undefined
+      const matches = reply.matches;
+      matches.forEach((match: string) => {
+        let completionItem: CompletionHandler.ICompletionItem = {
+          label: match,
+          range: { start: reply.start, end: reply.end }
+        };
+        items.push(completionItem);
+      });
     }
+    model.isLegacy = true;
+    items = this._dedupe(items);
+    model.setItems({ isIncomplete: false, items });
   }
 
   /**
