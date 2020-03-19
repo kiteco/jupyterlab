@@ -164,9 +164,12 @@ export class CompleterModel implements Completer.IModel {
    * This is a read-only property.
    */
   items(): CompletionHandler.ICompletionItems {
-    this._markup();
+    let query = this._query;
+    if (!query) {
+      return this._items;
+    }
+    this._markup(query);
     if (this.isLegacy) {
-      this._dedupe();
       this._sort();
     }
     return this._items;
@@ -344,11 +347,7 @@ export class CompleterModel implements Completer.IModel {
    * Highlight matching prefix by adding <mark> tags
    * Add score property based on how closely the prefix matches query.
    */
-  private _markup(): void {
-    let query = this._query;
-    if (!query) {
-      return;
-    }
+  private _markup(query: string): void {
     let items = (this._items && this._items.items) || [];
     let results: CompletionHandler.ICompletionItem[] = [];
     for (let item of items) {
@@ -373,22 +372,6 @@ export class CompleterModel implements Completer.IModel {
       }
     }
     this._items.items = results;
-  }
-
-  /**
-   * Dedupe any items that have the same label.
-   */
-  private _dedupe(): void {
-    let items = (this._items && this._items.items) || [];
-    let itemSet = new Set();
-    items.filter(item => {
-      if (!itemSet.has(item.label)) {
-        itemSet.add(item.label);
-        return true;
-      }
-      return false;
-    });
-    this._items.items = items;
   }
 
   /**
@@ -486,9 +469,10 @@ namespace Private {
         return delta;
       }
     }
-    return (
-      (a.insertText || a.label).localeCompare(b.insertText || b.label) || 0
-    );
+    if (a.insertText && b.insertText) {
+      return a.insertText.localeCompare(b.insertText);
+    }
+    return a.label.localeCompare(b.label);
   }
 
   /**

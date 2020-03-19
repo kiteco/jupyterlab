@@ -424,7 +424,7 @@ export class CompletionHandler implements IDisposable {
     // been used. Defensively check if it exists.
     const metadata = reply.metadata || {};
     const types = metadata._jupyter_types_experimental as JSONArray;
-    const items: CompletionHandler.ICompletionItem[] = [];
+    let items: CompletionHandler.ICompletionItem[] = [];
 
     if (types) {
       types.forEach((item: JSONObject) => {
@@ -433,6 +433,9 @@ export class CompletionHandler implements IDisposable {
         // and use undefined to indicate an unknown type.
         const text = item.text as string;
         const type = item.type as string;
+        if (type === '<unknown>') {
+          return;
+        }
         let completionItem: CompletionHandler.ICompletionItem = {
           label: text,
           type: type,
@@ -441,8 +444,26 @@ export class CompletionHandler implements IDisposable {
         items.push(completionItem);
       });
       model.isLegacy = true;
+      items = this._dedupe(items);
       model.setItems({ isIncomplete: false, items });
     }
+  }
+
+  /**
+   * Dedupe any items that have the same label.
+   */
+  private _dedupe(
+    items: CompletionHandler.ICompletionItem[]
+  ): CompletionHandler.ICompletionItem[] {
+    let itemSet = new Set();
+    items.filter(item => {
+      if (!itemSet.has(item.label)) {
+        itemSet.add(item.label);
+        return true;
+      }
+      return false;
+    });
+    return items;
   }
 
   private _connector: IDataConnector<
