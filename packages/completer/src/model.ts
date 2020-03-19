@@ -180,7 +180,7 @@ export class CompleterModel implements Completer.IModel {
    * new types to KNOWN_TYPES.
    */
   setItems(newValue: CompletionHandler.ICompletionItems): void {
-    if (JSONExt.deepEqual(newValue, this._items)) {
+    if (JSONExt.deepEqual(newValue.items, this._items.items)) {
       return;
     }
     const items = newValue.items;

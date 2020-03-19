@@ -514,11 +514,16 @@ export namespace CompletionHandler {
   /**
    * Wrapper object for ICompletionItem.
    */
-  export interface ICompletionItems extends PartialJSONObject {
+  export interface ICompletionItems {
     /**
      * isIncomplete is true if this is a partial list of completion items.
      */
     isIncomplete: boolean;
+
+    /**
+     * Callback which can be used for actions such as fetching full documentation.
+     */
+    resolve?: (id: string) => void;
 
     /**
      * Collection of completion items.
@@ -561,12 +566,6 @@ export namespace CompletionHandler {
      * about this item, like type or symbol information.
      */
     documentation?: string;
-
-    /**
-     * TODO: This is not compatiable with PartialJSONObject
-     * Callback which can be used for actions such as fetching full documentation.
-     */
-    // resolve?: () => void;
 
     /**
      * A number used to help sort a set of completion items.
