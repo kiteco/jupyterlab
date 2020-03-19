@@ -3,10 +3,6 @@
 
 import { expect } from 'chai';
 
-// import { toArray } from '@lumino/algorithm';
-
-// import { JSONExt } from '@lumino/coreutils';
-
 import { CodeEditor } from '@jupyterlab/codeeditor';
 
 import {
