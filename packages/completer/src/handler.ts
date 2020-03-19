@@ -439,7 +439,10 @@ export class CompletionHandler implements IDisposable {
         let completionItem: CompletionHandler.ICompletionItem = {
           label: text,
           type: type,
-          range: { start: reply.start, end: reply.end }
+          range: { start: reply.start, end: reply.end },
+          icon: type.endsWith('s')
+            ? 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJpY29uIGljb24tdGFibGVyIGljb24tdGFibGVyLWNsaXBib2FyZC1jaGVjayIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgPHBhdGggZD0iTTkgNUg3YTIgMiAwIDAwLTIgMnYxMmEyIDIgMCAwMDIgMmgxMGEyIDIgMCAwMDItMlY3YTIgMiAwIDAwLTItMmgtMiIgLz4KICA8cmVjdCB4PSI5IiB5PSIzIiB3aWR0aD0iNiIgaGVpZ2h0PSI0IiByeD0iMiIgLz4KICA8cGF0aCBkPSJNOSAxNGwyIDJsNCAtNCIgLz4KPC9zdmc+CgoK'
+            : undefined
         };
         items.push(completionItem);
       });
