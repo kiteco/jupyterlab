@@ -714,22 +714,31 @@ export namespace Completer {
         allowedTags: ['mark']
       });
 
-      if (item.type) {
+      // Add the icon or type monogram
+      if (item.icon) {
+        let iconNode = document.createElement('img');
+        iconNode.className = 'jp-Completer-type';
+        iconNode.src = item.icon;
+        li.appendChild(iconNode);
+      } else if (item.type) {
         let typeNode = document.createElement('span');
         let type = item.type;
         typeNode.textContent = (type[0] || '').toLowerCase();
         let colorIndex = (orderedTypes.indexOf(type) % N_COLORS) + 1;
         typeNode.className = 'jp-Completer-type';
         typeNode.setAttribute(`data-color-index`, colorIndex.toString());
-        li.title = type;
+        li.appendChild(typeNode);
+      }
+
+      li.appendChild(matchNode);
+
+      // Add the type extension, if necessary
+      if (item.type) {
+        li.title = item.type;
         let typeExtendedNode = document.createElement('code');
         typeExtendedNode.className = 'jp-Completer-typeExtended';
-        typeExtendedNode.textContent = type.toLocaleLowerCase();
-        li.appendChild(typeNode);
-        li.appendChild(matchNode);
+        typeExtendedNode.textContent = item.type.toLocaleLowerCase();
         li.appendChild(typeExtendedNode);
-      } else {
-        li.appendChild(matchNode);
       }
       return li;
     }
