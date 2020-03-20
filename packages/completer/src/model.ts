@@ -378,9 +378,8 @@ export class CompleterModel implements Completer.IModel {
    * Sort ICompletionItem based on its score attribute.
    */
   private _sort(): void {
-    let items = (this._items && this._items.items) || [];
+    const items = this._items.items;
     items.sort(Private.scoreCmp);
-    this._items.items = items;
   }
 
   /**
