@@ -568,11 +568,6 @@ export namespace CompletionHandler {
     documentation?: string;
 
     /**
-     * A number used to help sort a set of completion items.
-     */
-    score?: number;
-
-    /**
      * A string used to help filter a set of completion items.
      */
     filterText?: string;

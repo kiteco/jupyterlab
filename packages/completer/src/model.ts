@@ -463,7 +463,7 @@ namespace Private {
     b: CompletionHandler.ICompletionItem
   ): number {
     if (a.score && b.score) {
-      let delta = a.score - b.score;
+      let delta = (a.score as number) - (b.score as number);
       if (delta !== 0) {
         return delta;
       }
