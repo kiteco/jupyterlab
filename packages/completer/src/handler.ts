@@ -523,7 +523,7 @@ export namespace CompletionHandler {
     /**
      * Callback which can be used for actions such as fetching full documentation.
      */
-    resolve?: (id: string) => void;
+    resolve?: (item: ICompletionItem) => void;
 
     /**
      * Collection of completion items.
