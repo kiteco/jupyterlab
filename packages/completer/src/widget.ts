@@ -717,9 +717,7 @@ export namespace Completer {
       if (item.type) {
         let typeNode = document.createElement('span');
         let type = item.type;
-        typeNode.textContent = typeNode.textContent = (
-          type[0] || ''
-        ).toLowerCase();
+        typeNode.textContent = (type[0] || '').toLowerCase();
         let colorIndex = (orderedTypes.indexOf(type) % N_COLORS) + 1;
         typeNode.className = 'jp-Completer-type';
         typeNode.setAttribute(`data-color-index`, colorIndex.toString());
