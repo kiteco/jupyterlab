@@ -717,7 +717,7 @@ export namespace Completer {
       // Add the icon or type monogram
       if (item.icon) {
         let iconNode = document.createElement('img');
-        iconNode.className = 'jp-Completer-type';
+        iconNode.className = 'jp-Completer-icon';
         iconNode.src = item.icon;
         li.appendChild(iconNode);
       } else if (item.type) {
