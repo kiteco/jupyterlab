@@ -52,23 +52,21 @@
   vertical-align: middle;
 }
 
-.jp-Completer-item .jp-Completer-icon {
-  display: table-cell;
-  box-sizing: border-box;
-  height: var(--jp-private-completer-item-height);
-  background: transparent;
-  width: var(--jp-private-completer-item-height);
-  vertical-align: middle;
-}
-
 .jp-Completer-item .jp-Completer-type {
   display: table-cell;
   box-sizing: border-box;
   height: var(--jp-private-completer-item-height);
-  text-align: center;
   background: transparent;
-  color: white;
   width: var(--jp-private-completer-item-height);
+}
+
+.jp-Completer-item .jp-Completer-icon {
+  vertical-align: middle;
+}
+
+.jp-Completer-item .jp-Completer-monogram {
+  text-align: center;
+  color: white;
   font-family: var(--jp-ui-font-family);
   font-size: var(--jp-ui-font-size1);
   line-height: calc(
