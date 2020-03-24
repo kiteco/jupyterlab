@@ -490,7 +490,8 @@ namespace Private {
     const newTypeSet = new Set<string>();
     items.forEach(item => {
       if (
-        (item.type && !KNOWN_TYPES.includes(item.type)) ||
+        item.type &&
+        !KNOWN_TYPES.includes(item.type) &&
         !newTypeSet.has(item.type!)
       ) {
         newTypeSet.add(item.type!);
