@@ -928,14 +928,14 @@ export namespace Completer {
       // Add the icon or type monogram
       if (icon) {
         let iconNode = document.createElement('img');
-        iconNode.className = 'jp-Completer-icon';
+        iconNode.className = 'jp-Completer-type jp-Completer-icon';
         iconNode.src = icon;
         li.appendChild(iconNode);
       } else if (typesExist) {
         let typeNode = document.createElement('span');
         typeNode.textContent = (type[0] || '').toLowerCase();
         let colorIndex = (orderedTypes.indexOf(type) % N_COLORS) + 1;
-        typeNode.className = 'jp-Completer-type';
+        typeNode.className = 'jp-Completer-type jp-Completer-monogram';
         typeNode.setAttribute(`data-color-index`, colorIndex.toString());
         li.appendChild(typeNode);
       }
