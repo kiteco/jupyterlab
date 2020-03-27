@@ -524,8 +524,11 @@ export class Completer extends Widget {
     if (!activeItem) {
       return;
     }
+    docPanel.textContent = '';
     if (activeItem.documentation) {
-      docPanel.textContent = activeItem.documentation;
+      let pre = document.createElement('pre');
+      pre.textContent = activeItem.documentation;
+      docPanel.appendChild(pre);
       docPanel.setAttribute('style', '');
     } else {
       docPanel.setAttribute('style', 'display:none');
