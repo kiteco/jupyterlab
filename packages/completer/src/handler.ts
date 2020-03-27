@@ -436,10 +436,24 @@ export class CompletionHandler implements IDisposable {
         if (type === '<unknown>') {
           return;
         }
+        let docString: string | undefined;
+        if (type.endsWith('tion')) {
+          docString =
+            'Lorem\n\nipsum\ndolor\n\nsit\namet\nconsectetur\nadipiscing elit eros donec primis taciti rhoncus, proin lacinia mi in maecenas hac velit dui massa porttitor elementum. Maecenas neque eros dictumst curae phasellus ad, nam cras diam porttitor feugiat tristique class, leo magna aliquet sapien metus. Tempus montes tempor nibh duis malesuada senectus sociosqu morbi pulvinar tortor feugiat est, netus lobortis ut fames nisi habitasse molestie dignissim quisque egestas. Vulputate velit justo etiam massa mattis facilisis feugiat luctus tristique, tempor sapien tincidunt convallis nibh enim vel cubilia.\n' +
+            '\n' +
+            'Neque mollis primis ante porttitor vivamus tempus penatibus est, molestie felis suspendisse conubia senectus ornare sapien lacus, dignissim consequat id scelerisque arcu cras vitae. Maecenas rutrum feugiat justo pulvinar dignissim auctor, vivamus arcu diam in inceptos class etiam, est quam turpis felis nullam. Montes tincidunt libero vitae morbi cras felis sagittis quam, leo himenaeos bibendum pulvinar platea lectus habitant, elementum penatibus nulla viverra litora sodales cum. Placerat volutpat aliquam molestie varius lacus rutrum faucibus primis, tellus magna scelerisque parturient massa platea mauris litora, pretium dignissim pellentesque rhoncus taciti gravida cursus.\n' +
+            '\n' +
+            'Aptent sapien cubilia fermentum senectus consequat quis libero mauris nulla, sociis vestibulum parturient sociosqu inceptos in ullamcorper litora conubia, id eu sodales quisque bibendum nostra interdum aenean. Nam facilisis eget donec phasellus vel proin dui cras mauris, convallis porta eu est suscipit pellentesque in cursus erat sociis, nibh habitant fermentum scelerisque nec magnis nunc tellus. Aptent nam primis quisque porttitor id nisi vulputate tellus tortor ac, facilisi rhoncus sem cubilia placerat maecenas laoreet ultricies fringilla ultrices ligula, volutpat etiam semper potenti est viverra penatibus vitae praesent.';
+        } else if (type.endsWith('s')) {
+          docString = 'this type (' + type + ")ends with 's'";
+        } else {
+          docString = undefined;
+        }
         let completionItem: CompletionHandler.ICompletionItem = {
           label: text,
           type: type,
-          range: { start: reply.start, end: reply.end }
+          range: { start: reply.start, end: reply.end },
+          documentation: docString
         };
         items.push(completionItem);
       });
