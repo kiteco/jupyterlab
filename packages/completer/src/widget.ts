@@ -63,7 +63,7 @@ export class Completer extends Widget {
    * Construct a text completer menu widget.
    */
   constructor(options: Completer.IOptions) {
-    super({ node: document.createElement('ul') });
+    super({ node: document.createElement('div') });
     this._renderer = options.renderer || Completer.defaultRenderer;
     this.model = options.model || null;
     this.editor = options.editor || null;
@@ -256,13 +256,22 @@ export class Completer extends Widget {
     let orderedTypes = model.orderedTypes();
 
     // Populate the completer items.
+    let ul = document.createElement('ul');
+    ul.className = 'jp-Completer-list';
     for (let item of items) {
       let li = this._renderer.createItemNode(item, orderedTypes);
-      node.appendChild(li);
+      ul.appendChild(li);
     }
+    node.appendChild(ul);
 
     let active = node.querySelectorAll(`.${ITEM_CLASS}`)[this._activeIndex];
     active.classList.add(ACTIVE_CLASS);
+
+    // Add the documentation panel
+    let docPanel = document.createElement('div');
+    docPanel.className = 'jp-Completer-docpanel';
+    node.appendChild(docPanel);
+    this._updateDocPanel();
 
     // If this is the first time the current completer session has loaded,
     // populate any initial subset match.
@@ -321,7 +330,11 @@ export class Completer extends Widget {
 
     active = items[this._activeIndex] as HTMLElement;
     active.classList.add(ACTIVE_CLASS);
-    ElementExt.scrollIntoViewIfNeeded(this.node, active);
+    let completionList = this.node.querySelector(
+      '.jp-Completer-list'
+    ) as Element;
+    ElementExt.scrollIntoViewIfNeeded(completionList, active);
+    this._updateDocPanel();
   }
 
   /**
@@ -496,6 +509,27 @@ export class Completer extends Widget {
       privilege: 'below',
       style: style
     });
+  }
+
+  private _updateDocPanel(): void {
+    let docPanel = this.node.querySelector('.jp-Completer-docpanel');
+    if (!docPanel) {
+      return;
+    }
+    let items = this.model?.items().items;
+    if (!items) {
+      return;
+    }
+    let activeItem = items[this._activeIndex];
+    if (!activeItem) {
+      return;
+    }
+    if (activeItem.documentation) {
+      docPanel.textContent = activeItem.documentation;
+      docPanel.setAttribute('style', '');
+    } else {
+      docPanel.setAttribute('style', 'display:none');
+    }
   }
 
   private _activeIndex = 0;
