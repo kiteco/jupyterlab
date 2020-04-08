@@ -56,7 +56,8 @@
     "@jupyterlab/tooltip-extension": "~2.1.0-rc.0",
     "@jupyterlab/ui-components-extension": "~2.1.0-rc.0",
     "@jupyterlab/vdom-extension": "~2.1.0-rc.0",
-    "@jupyterlab/vega5-extension": "~2.1.0-rc.0"
+    "@jupyterlab/vega5-extension": "~2.1.0-rc.0",
+    "@krassowski/jupyterlab-lsp": "file:/Users/edwardzhao/go/src/github.com/kiteco/jupyterlab-lsp/packages/jupyterlab-lsp"
   },
   "devDependencies": {
     "@jupyterlab/buildutils": "^2.1.0-rc.0",
@@ -232,7 +233,9 @@
       "@jupyterlab/pdf-extension": "",
       "@jupyterlab/vega5-extension": ""
     },
-    "externalExtensions": {},
+    "externalExtensions": {
+      "@krassowski/jupyterlab-lsp": "file:/Users/edwardzhao/go/src/github.com/kiteco/jupyterlab-lsp/packages/jupyterlab-lsp"
+    },
     "buildDir": "./static",
     "outputDir": ".",
     "singletonPackages": [

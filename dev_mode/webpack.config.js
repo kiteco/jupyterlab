@@ -296,7 +296,8 @@ module.exports = [
       poll: 333
     },
     node: {
-      fs: 'empty'
+      fs: 'empty',
+      net: 'empty'
     },
     bail: true,
     devtool: 'inline-source-map',
