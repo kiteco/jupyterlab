@@ -84,6 +84,9 @@
 
 .jp-Completer-item .jp-Completer-icon {
   vertical-align: middle;
+  /* Normal element size from LabIconStyle.ISheetOptions */
+  height: 16px;
+  width: 16px;
 }
 
 .jp-Completer-item .jp-Completer-monogram {
